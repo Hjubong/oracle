@@ -101,20 +101,252 @@ UPDATE tblstaff SET project = '멤버 조치' WHERE project like '%,회원 응�
 
 
 -- 해결 > 테이블 재구성
-DROP TABLE TBLSTAFF
+DROP TABLE TBLSTAFF;
+DROP TABLE TBLPROJECT;
 
 -- 직원 정보
 -- 직원(번호(PK), 직원명, 급여, 거주지)
-create TABLE tblStaff(
+create TABLE tblStaff(	
 	seq NUMBER PRIMARY KEY, 			--직원번호(PK)
 	name varchar2(30) NOT NULL,			--직원명
 	salary NUMBER NOT NULL, 			--급여
 	address varchar2(300) NOT NULL 	--거주지
-);
+); -- 부모 테이블
 
 -- 프로젝트 정보
 CREATE TABLE tblproject(
-	seq NUMBER PRIMARY KEY, 		--
-	project varchar2(100) NOT NULL, --프로젝트명
-	staff_seq NUMBER NOT NULL		--담당 직원 번호
+	seq NUMBER PRIMARY KEY, 							--프로젝트 번호(PK)
+	project varchar2(100) NOT NULL, 					--프로젝트명
+	staff_seq NUMBER NOT NULL REFERENCES tblStaff(seq) --담당 직원 번호(FK)
+); --자식 테이블
+
+INSERT INTO tblstaff (seq, name, salary, address) VALUES (1, '홍길동', 300, '서울시');
+INSERT INTO tblstaff (seq, name, salary, address) VALUES (2, '아무개', 250, '인천시');
+INSERT INTO tblstaff (seq, name, salary, address) VALUES (3, '하하하', 250, '부산시');
+
+INSERT INTO tblProject (seq, project, staff_seq) VALUES (1, '홍콩 수출', 1); --홍길동
+INSERT INTO tblProject (seq, project, staff_seq) VALUES (2, 'TV 광고', 2);	--아무개
+INSERT INTO tblProject (seq, project, staff_seq) VALUES (3, '매출 분석', 3);	--하하하
+INSERT INTO tblProject (seq, project, staff_seq) VALUES (4, '노조 협상', 1);	--홍길동
+INSERT INTO tblProject (seq, project, staff_seq) VALUES (5, '대리점 분양', 2);--아무개
+
+SELECT * FROM TBLSTAFF;
+SELECT * FROM TBLproject;
+
+-- 'TV 광고' > 담당자!! > 확인?
+SELECT staff_seq FROM TBLPROJECT WHERE project = 'TV 광고';
+SELECT * FROM tblstaff 
+	WHERE seq = (SELECT staff_seq FROM TBLPROJECT WHERE project = 'TV 광고');
+	
+-- A. 신입 사원 입사 > 신규 프로젝트 담당
+-- A.1 신입 사원 추가(O)
+INSERT INTO tblstaff (seq, name, salary, address) VALUES (4, '호호호', 250, '성남시');
+
+-- A.2 신규 프로젝트 추가(O)
+INSERT INTO tblProject (seq, project, staff_seq) VALUES (6, '자재 매입', 4);
+
+-- A.3 신규 프로젝트 추가 > 에러(X) > 논리 오류!!
+INSERT INTO tblProject (seq, project, staff_seq) VALUES (7, '고객 유치', 5);
+
+SELECT * FROM tblstaff 
+	WHERE seq = (SELECT staff_seq FROM TBLPROJECT WHERE project = '고객 유치');
+
+
+-- B. '홍길동' 퇴사
+-- B.1 '홍길동' 삭제
+DELETE FROM tblstaff WHERE seq = 1;
+	
+-- B.2 '홍길동' 삭제 > 인수 인계(위임)
+UPDATE TBLPROJECT SET staff_seq = 2 WHERE staff_seq = 1;
+
+-- B.3 '홍길동' 삭제
+DELETE FROM tblstaff WHERE seq = 1;
+
+
+-- *** 자식 테이블보다 부모 테이블이 먼저 발생한다.(테이블 생성, 레코드 생성)
+-- 고객 테이블
+create table tblCustomer (
+    seq number primary key,         --고객번호(PK)
+    name varchar2(30) not null,     --고객명
+    tel varchar2(15) not null,      --연락처
+    address varchar2(100) not null  --주소
 );
+
+-- 판매내역 테이블
+create table tblSales (
+    seq number primary key,                             --판매번호(PK)
+    item varchar2(50) not null,                         --제품명
+    qty number not null,                                --판매수량
+    regdate date default sysdate not null,              --판매날짜
+    cseq number not null references tblCustomer(seq)    --판매한 고객번호(FK)
+);
+
+
+
+
+-- [비디오 대여점]
+
+-- 장르 테이블
+create table tblGenre (
+    seq number primary key,         --장르 번호(PK)
+    name varchar2(30) not null,     --장르명
+    price number not null,          --대여가격
+    period number not null          --대여기간(일)
+);
+
+-- 비디오 테이블
+create table tblVideo (
+    seq number primary key,                         --비디오 번호(PK)
+    name varchar2(100) not null,                    --비디오 제목
+    qty number not null,                            --보유 수량
+    company varchar2(50) null,                      --제작사
+    director varchar2(50) null,                     --감독
+    major varchar2(50) null,                        --주연배우
+    genre number not null references tblGenre(seq)  --장르 번호(FK)
+);
+
+-- ***
+-- 고객 테이블
+create table tblMember (
+    seq number primary key,         --고객번호(PK)
+    name varchar2(30) not null,     --고객명
+    grade number(1) not null,       --고객등급(1,2,3)
+    byear number(4) not null,       --생년
+    tel varchar2(15) not null,      --연락처
+    address varchar2(300) null,     --주소
+    money number not null           --예치금
+);
+
+-- 대여 테이블
+create table tblRent (
+    seq number primary key,                             --대여번호(PK)
+    member number not null references tblMember(seq),   --회원번호(FK)
+    video number not null references tblVideo(seq),     --비디오번호(FK)
+    rentdate date default sysdate not null,             --대여시각
+    retdate date null,                                  --반납시각
+    remark varchar2(500) null                           --비고
+);
+
+
+
+SELECT * FROM TBLGENRE;
+SELECT * FROM TBLvideo;
+SELECT * FROM TBLmember;
+SELECT * FROM TBLrent;
+
+
+/*
+	조인, Join
+	- (서로 관계를 맺은) 2개 이상의 테이블을 1개의 결과셋으로 만드는 기술
+	
+	조인의 종류
+	1. 단순 조인, CREOSS JOIN
+	2. 내부 조인, INNER JOIN ***
+	3. 외부 조인, OUTER JOIN ***
+	4. 셀프 조인, SELF JOIN
+	5. 전체 외부 조인, FULL OUTER JOIN
+
+*/
+
+/*
+	1. 단순 조인, CROSS JOIN, 카티션곱(데카르트곱)
+	- A 테이블 X B 테이블
+	- 쓸모없다 > 가치있는 행과 가치없는 행이 뒤섞여 있어서
+	- 더미 데이터(유효성 무관)
+*/
+
+SELECT * FROM TBLCUSTOMER; 	--3개
+
+SELECT * FROM TBLSALES;		--9개
+
+SELECT * FROM TBLCUSTOMER CROSS JOIN TBLSALES;	--ANSI-SQL(추천)
+SELECT * FROM TBLCUSTOMER, TBLSALES; --Oracle
+
+
+/*
+	2. 내부 조인, INNER JOIN
+	- 단순 조인에서 유효한 레코드만 추출한 조인
+	
+	select 컬럼리스트 from 테이블 A cross join 테이블 B;
+	
+	select 
+		컬럼리스트 
+	from 테이블 A 
+		inner join 테이블 B 
+			on 테이블A.PK = 테이블B.FK;
+	
+*/
+
+-- 직원 테이블, 프로젝트 테이블
+SELECT 
+	* 
+FROM TBLSTAFF
+	CROSS JOIN TBLPROJECT;
+	
+SELECT 
+	tblstaff.seq,
+	tblstaff.name,
+	tblproject.seq,
+	tblproject.project
+FROM TBLSTAFF
+	INNER JOIN TBLPROJECT
+		ON tblstaff.SEQ =tblproject.STAFF_SEQ
+			ORDER BY tblproject.SEQ;
+			
+	
+-- 조인 > 테이블 별칭 자주 사용
+SELECT 	--2.
+	s.seq,
+	s.name,
+	p.seq,
+	p.project
+FROM TBLSTAFF s
+	INNER JOIN TBLPROJECT P
+		ON s.SEQ =p.STAFF_SEQ 	--1.
+			ORDER BY p.SEQ; --3.
+			
+			
+-- 고객 테이블, 판매 테이블
+SELECT
+	c.name AS 고객명,
+	s.item AS 제품명,
+	s.qty AS 개수
+FROM TBLCUSTOMER c
+	INNER JOIN TBLSALES S
+		ON c.SEQ = s.CSEQ;
+		
+
+	
+SELECT * FROM TBLMEN;
+SELECT * FROM TBLWOMEN;
+
+SELECT
+	*
+FROM TBLMEN m
+	INNER JOIN TBLWOMEN W
+		ON m.NAME = w.COUPLE;
+		
+	
+SELECT
+	*
+FROM TBLSTAFF st
+	INNER JOIN TBLSALES sa
+		ON st.seq = sa.CSEQ;
+		
+	
+-- 고객명 + 판매물품명 > 가져오시오
+-- 1. 조인
+SELECT
+	c.NAME AS 고객명,
+	s.ITEM AS 물품명
+FROM TBLCUSTOMER c
+	INNER JOIN TBLSALES S
+		ON c.seq = s.CSEQ;
+
+-- 2. 서브 쿼리 > 상관 서브 쿼리
+-- 메인쿼리 > 자식 테이블
+-- 상관 서브 쿼리 > 부모 테이블
+SELECT
+	ITEM AS 물품명,
+	(SELECT name FROM TBLCUSTOMER WHERE seq = tblsales.cseq) AS 고객명
+FROM TBLSALES;

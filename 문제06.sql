@@ -1,5 +1,5 @@
 --1. traffic_accident. 각 교통 수단 별(지하철, 철도, 항공기, 선박, 자동차) 발생한 총 교통 사고 발생 수, 총 사망자 수, 사건 당 평균 사망자 수를 가져오시오.
-SELECT * FROM
+SELECT * FROM TRAFFIC_ACCIDENT
         
         
 
@@ -45,7 +45,7 @@ SELECT
 	COUNT(*)
 FROM TBLADDRESSBOOK
 	GROUP BY substr(name,1,1)
-	HAVING 
+	HAVING COUNT(*) >= 100
 
 
             
