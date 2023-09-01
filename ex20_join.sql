@@ -350,3 +350,289 @@ SELECT
 	ITEM AS 물품명,
 	(SELECT name FROM TBLCUSTOMER WHERE seq = tblsales.cseq) AS 고객명
 FROM TBLSALES;
+
+
+
+
+-- 비디오 + 장르 > 조인
+SELECT
+	v.NAME,
+	g.NAME,
+	g.PRICE
+FROM TBLGENRE g
+	INNER JOIN TBLVIDEO v 
+		ON g.seq = v.GENRE;
+			
+	
+-- 비디오 + 장르 + 대여
+SELECT
+	v.NAME,
+	g.NAME,
+	g.PRICE,
+	r.rentdate,
+	r.retdate
+FROM TBLGENRE g
+	INNER JOIN TBLVIDEO v 
+		ON g.seq = v.GENRE
+			INNER JOIN tblrent r 
+				ON v.seq = r.VIDEO;
+
+			
+			
+-- 비디오 + 장르 + 대여 + 회원
+SELECT
+	m.NAME,
+	v.name,
+	g.PRICE,
+	r.RENTDATE
+FROM TBLGENRE g
+	INNER JOIN TBLVIDEO v 
+		ON g.seq = v.GENRE
+			INNER JOIN tblrent r 
+				ON v.seq = r.VIDEO	
+					INNER JOIN tblmember m
+						ON m.seq = r.MEMBER;
+					
+					
+					
+SELECT
+	e.FIRST_NAME || ' ' || e.LAST_NAME AS "직원명",
+	d.DEPARTMENT_NAME AS "부서명",
+	l.city AS "도시명",
+	c.COUNTRY_NAME AS "국가명",
+	r.REGION_NAME AS "대륙명",
+	j.JOB_TITLE AS "직업"
+FROM EMPLOYEES e
+		INNER JOIN DEPARTMENTS d
+			ON d.DEPARTMENT_ID = e.DEPARTMENT_ID
+				INNER JOIN LOCATIONS l
+					ON l.LOCATION_ID = d.LOCATION_ID
+						INNER JOIN COUNTRIES c 
+							ON c.COUNTRY_ID = l.COUNTRY_ID
+								INNER JOIN REGIONS r 
+									ON r.REGION_ID = c.REGION_ID
+										INNER JOIN jobs j 
+											ON j.JOB_ID = e.JOB_ID;
+										
+						
+						
+/*
+ 	3. 외부 조인, OUTER JOIN
+ 	- 내부 조인의 반댓말
+ 	- 내부 조인 결과 + 내부 조인에 포함되지 않았던 부모 테이블의 나머지 레코드를 합하는 조인
+ 	
+ 	select
+ 		컬럼리스트
+ 	from 테이블A
+ 		inner join 테이블B
+ 			on 테이블A.컬럼 = 테이블B.컬럼;
+ 			
+ 			
+ 	select
+ 		컬럼리스트
+ 	from 테이블A
+ 		(left|right) outer join 테이블B
+ 			on 테이블A.컬럼 = 테이블B.컬럼;
+ */
+										
+										
+SELECT * FROM TBLCUSTOMER; -- 3명 > 5명
+SELECT * FROM TBLSALES; --9건
+			
+INSERT INTO TBLCUSTOMER VALUES (4, '호호호', '010-1234-1234', '서울시');
+INSERT INTO TBLCUSTOMER VALUES (5, '이순신', '010-1234-1234', '서울시');
+
+-- 내부 조인
+-- 업무 > 물건을 한번이라도 구매한 이력이 있는 고객의 정보와 그 고객이 사간 구매내역을 가져오시오.
+SELECT
+	*
+FROM TBLCUSTOMER c
+	INNER JOIN TBLSALES s 
+		ON c.seq = s.cseq; --9
+		
+--외부 조인		
+SELECT
+	*
+FROM TBLCUSTOMER c
+	LEFT OUTER JOIN TBLSALES s 
+		ON c.seq = s.cseq; --11 
+										
+
+SELECT
+	*
+FROM TBLCUSTOMER c
+	RIGHT OUTER JOIN TBLSALES s 
+		ON c.seq = s.cseq; --9 
+										
+
+
+SELECT * FROM TBLSTAFF; --3명
+SELECT * FROM TBLPROJECT; --6건
+
+UPDATE TBLPROJECT SET staff_seq = 4 WHERE STAFF_SEQ = 3;
+
+
+-- 프로젝트 1건 이상 담당하고 있는 직원을 가져오시오.
+SELECT
+	* 
+FROM TBLSTAFF s 
+	INNER JOIN TBLPROJECT p 
+	 	ON s.seq = p.STAFF_SEQ;
+	 
+	 
+-- 담당 프로젝트의 유무와 상관없이 모든 직원을 가져오시오.
+SELECT
+	* 
+FROM TBLSTAFF s 
+	LEFT OUTER JOIN TBLPROJECT p 
+	 	ON s.seq = p.STAFF_SEQ;
+	 
+	 
+-- 대여가 한번이라도 발생한 비디오와 대여기록
+SELECT
+	*
+FROM TBLVIDEO v
+	INNER JOIN TBLRENT r
+		ON v.seq = r.VIDEO;
+	
+	
+SELECT
+	*
+FROM TBLVIDEO v
+	LEFT OUTER JOIN TBLRENT r 
+		ON v.seq = r.VIDEO;
+	
+-- 대여를 최소 1회 이상 회원과 대여 내역
+SELECT
+	*
+FROM TBLMEMBER m
+	INNER JOIN TBLRENT r 
+		ON m.seq = r.MEMBER;
+	
+SELECT
+	*
+FROM TBLMEMBER m
+	LEFT OUTER JOIN TBLRENT r 
+		ON m.seq = r.MEMBER;
+	
+-- 대여를 한번도 하지 않은 고객 명단
+SELECT
+	*
+FROM TBLMEMBER m
+	LEFT OUTER JOIN TBLRENT r 
+		ON m.seq = r.MEMBER
+			WHERE r.seq IS NULL;
+	
+-- 대여 기록이 있는 회원의 이름
+SELECT
+	DISTINCT m.NAME
+FROM TBLMEMBER m
+	inner JOIN TBLRENT r 
+		ON m.seq = r.MEMBER;
+		
+-- 대여 기록이 있는 회원의 이름 + 대여 횟수
+SELECT
+	m.NAME,
+	COUNT(*)
+FROM TBLMEMBER m
+	inner JOIN TBLRENT r 
+		ON m.seq = r.MEMBER
+			GROUP BY m.name;
+		
+		
+		
+SELECT	
+	m.NAME,
+	COUNT(r.SEQ)
+FROM TBLMEMBER m
+	LEFT OUTER JOIN TBLRENT r 
+		ON m.seq = r.MEMBER
+			GROUP BY m.name
+				ORDER BY COUNT(r.seq) DESC;
+			
+			
+			
+/*
+ 	4. 셀프 조인, SELF JOIN
+ 	- 1개의 테이블을 사용하는 조인
+ 	- 테이블이 자기 스스로와 관계를 맺는 경우
+ 	
+ 	- 다중 조인(2개) + 내부 조인
+ 	- 다중 조인(2개) + 외부 조인
+ */
+	
+			
+-- 직원 테이블
+CREATE TABLE tblSelf (
+	seq NUMBER PRIMARY KEY,						--직원번호(PK)
+	name varchar2(30) NOT NULL,					--직원명
+	DEPARTMENTS varchar2(30) NOT NULL,			--부서명
+	super NUMBER NULL REFERENCES tblself(seq)	--상사번호(FK)			
+);
+
+INSERT INTO TBLSELF VALUES (1, '홍사장', '사장', null);
+INSERT INTO TBLSELF VALUES (2, '김부장', '영업부', 1);
+INSERT INTO TBLSELF VALUES (3, '박과장', '영업부', 2);
+INSERT INTO TBLSELF VALUES (4, '최대리', '영업부', 3);
+INSERT INTO TBLSELF VALUES (5, '정사원', '영업부', 4);
+INSERT INTO TBLSELF VALUES (6, '이부장', '개발부', 1);
+INSERT INTO TBLSELF VALUES (7, '하과장', '개발부', 6);
+INSERT INTO TBLSELF VALUES (8, '신과장', '개발부', 6);
+INSERT INTO TBLSELF VALUES (9, '황대리', '개발부', 7);
+INSERT INTO TBLSELF VALUES (10, '허사원', '개발부', 9);
+		
+-- 직원 명단을 가져오시오. 단, 상사의 이름까지
+-- 1. Join
+-- 2. Sub Query
+-- 3. 계층형 쿼리
+
+SELECT 
+	b.name AS 직원명,
+	b.departments AS 부서명,
+	a.name AS 상사명
+FROM TBLSELF a				-- 역할: 부모테이블 > 상사
+	INNER JOIN tblself b	-- 역할: 자식테이블 > 직원
+		ON a.seq = b.super;
+		
+	
+SELECT 
+	b.name AS 직원명,
+	b.departments AS 부서명,
+	a.name AS 상사명
+FROM TBLSELF a				
+	RIGHT outer JOIN tblself b	
+		ON a.seq = b.super;
+		
+	
+SELECT
+	name AS 직원명,
+	departments AS 부서명,
+	(SELECT name FROM TBLSELF WHERE seq = a.super) AS 상사명
+FROM TBLSELF a;
+
+
+
+/*
+	5. 전체 외부 조인, FULL OUTER JOIN
+	- 서로 참조하고 있는 관계에서 사용
+*/
+
+SELECT * FROM TBLMEN;	--부모, 자식
+SELECT * FROM TBLWOMEN;	--자식, 부모
+
+
+-- 커플인 남자, 여자 가져오시오.
+SELECT
+	m.name,
+	w.name
+FROM TBLMEN m
+	INNER JOIN TBLWOMEN w
+		ON m.NAME = w.COUPLE;
+		
+	
+SELECT
+	m.name,
+	w.name
+FROM TBLMEN m
+	full OUTER JOIN TBLWOMEN w
+		ON m.NAME = w.COUPLE;
