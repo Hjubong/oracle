@@ -76,3 +76,43 @@ ALTER TABLE tbledit
 	
 ALTER TABLE tbledit
 	DROP COLUMN seq; -- PK삭제 > 절대 금지!!!
+	
+
+-- Case 3. 컬럼 수정하기
+SELECT * FROM TBledit;
+
+INSERT INTO tbledit VALUES (4, '애플 M2 맥북 프로 2023');
+
+-- Case 3.1 컬럼 길이 수정하기(확장/축소)
+ALTER TABLE tbledit 
+	modify(DATA varchar2(100));
+	
+ALTER TABLE tbledit 
+	modify(DATA varchar2(20));
+	
+
+-- Case 3.2 컬럼의 제약사항 수정하기
+ALTER TABLE tbledit 
+	modify(DATA varchar2(100) null);
+	
+INSERT INTO tbledit VALUES (5, null);
+
+ALTER TABLE tbledit 
+	modify(DATA varchar2(100) NOT null);
+	
+-- Case 3.3 컬럼의 자료형 바꾸기 > 테이블 비우고 작업
+ALTER TABLE TBLEDIT
+	MODIFY (DATA number); -- SOL*Plus > SQL Developer 전용 명령어
+
+DESC tbledit;
+
+DELETE FROM TBLEDIT;
+
+SELECT * FROM TBLEDIT;
+
+
+
+
+
+
+
