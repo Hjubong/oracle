@@ -93,7 +93,7 @@ SELECT name, buseo, jikwi, tel FROM TBLINSA;
 -- 3. UPDATE > 실행O > 절대 사용 금지
 -- 4. DELETE > 실행O > 절대 사용 금지
 
-CREATE OR REPLACE VIEW vwTodo -- 단순 뷰
+CREATE OR REPLACE VIEW vwTodo -- 단순 뷰 > 뷰의 SELECT가 1개의 테이블로 구성
 AS
 SELECT * FROM tblTodo;
 
@@ -101,3 +101,5 @@ SELECT * FROM vwtodo;
 INSERT INTO vwtodo VALUES ((SELECT max(seq) + 1 FROM tbltodo) , '할일', sysdate, NULL);
 UPDATE vwTOdo SET title = '할일 완료' WHERE seq = 24;
 DELETE vwtodo WHERE seq = 25;
+
+
